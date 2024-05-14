@@ -13,7 +13,7 @@ const renderCountry = function (data, className = '') {
       <p class="country__row"><span>👫</span>${(
         +data.population / 1000000
       ).toFixed(1)} people</p>
-      <p class="country__row"><span>🗣️</span>${data.languages.eng}</p>
+      <p class="country__row"><span>🗣️</span>${data.languages}</p>
       <p class="country__row"><span>💰</span>${data.currencies}</p>
     </div>
   </article>
@@ -27,6 +27,17 @@ const renderError = function (msg) {
   countriesContainer.style.opacity = 1;
 };
 
+const renderDetails = function (data) {
+  const { languages } = data[0];
+  const { currencies } = data[0];
+  for (const [_, value] of Object.entries(languages)) {
+    data[0].languages = value;
+  }
+  for (const [_, value] of Object.entries(currencies)) {
+    data[0].currencies = value.name;
+  }
+};
+
 const getJSON = function (url, errMsg = 'Something went wrong') {
   return fetch(url).then(response => {
     if (!response.ok) throw new Error(`${errMsg} ${response.status}`);
@@ -37,6 +48,7 @@ const getJSON = function (url, errMsg = 'Something went wrong') {
 const getCountryAndNeighbour = function (country) {
   getJSON(`https://restcountries.com/v3.1/name/${country}`, 'Country Not found')
     .then(data => {
+      renderDetails(data);
       renderCountry(data[0]);
       const neighbour = data[0].borders?.[0];
       if (!neighbour) throw new Error('No Neighbour found');
@@ -45,7 +57,10 @@ const getCountryAndNeighbour = function (country) {
         'Country Not found'
       );
     })
-    .then(data => renderCountry(data[0], 'neighbour'))
+    .then(data => {
+      renderDetails(data);
+      renderCountry(data[0], 'neighbour');
+    })
     .catch(err => {
       console.error(`${err} 🔥🔥🔥`);
       renderError(`Something went wrong ${err.message}.🔥🔥🔥 Try again! `);
@@ -83,11 +98,14 @@ const whereAmI = function (lat, lng) {
       if (!Response.ok) throw new Error(`Country not found ${Response.status}`);
       return Response.json();
     })
-    .then(data => renderCountry(data[0]))
+    .then(data => {
+      renderDetails(data);
+      renderCountry(data[0]);
+    })
     .catch(err => console.error(err.message));
 };
 
 whereAmI(5543453453543543543453, 856378328741353133);
-btn.addEventListener('click', function () {
-  whereAmI(19.037, 72.873);
-});
+// btn.addEventListener('click', function () {
+//   // whereAmI(19.037, 72.873);
+// });
